@@ -111,7 +111,7 @@ namespace TimeService_TinyCLR_Example
                 TimeService.Start();
                 Debug.WriteLine("Returned from Starting Timeservice");
                 Thread.Sleep(100);
-                if (DateTime.Now > new DateTime(2016, 7, 1))
+                if (DateTime.Now > new DateTime(2018, 7, 1))
                 {
                     timeServiceIsRunning = true;
                     Debug.WriteLine("Timeserver intialized on try: " + loopCounter);

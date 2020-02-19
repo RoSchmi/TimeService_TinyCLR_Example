@@ -201,8 +201,16 @@ namespace RoSchmi.TinyCLR.Time
         public static DateTime GetTimeFromNTP(byte[] serverAddress)
         {
             errorCode = 0;
-            long ip = 16777216 * (long)serverAddress[0] + 65536 * (long)serverAddress[1]
-                      + 256 * (long)serverAddress[2] + (long)serverAddress[3];
+            long ip;
+            try
+            {
+                ip = 16777216 * (long)serverAddress[0] + 65536 * (long)serverAddress[1]
+                          + 256 * (long)serverAddress[2] + (long)serverAddress[3];
+            }
+            catch
+            {
+                return DateTime.MinValue;
+            }
             status.SyncSourceServer = (uint)ip;
 
             Socket ntpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
