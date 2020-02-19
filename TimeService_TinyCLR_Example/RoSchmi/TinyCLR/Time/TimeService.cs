@@ -202,10 +202,20 @@ namespace RoSchmi.TinyCLR.Time
         {
             errorCode = 0;
             long ip;
+
+           
+
             try
             {
-                ip = 16777216 * (long)serverAddress[0] + 65536 * (long)serverAddress[1]
-                          + 256 * (long)serverAddress[2] + (long)serverAddress[3];
+                if (serverAddress != null)
+                {
+                    ip = 16777216 * (long)serverAddress[0] + 65536 * (long)serverAddress[1]
+                              + 256 * (long)serverAddress[2] + (long)serverAddress[3];
+                }
+                else
+                {
+                    return DateTime.MinValue;
+                }
             }
             catch
             {
@@ -213,65 +223,68 @@ namespace RoSchmi.TinyCLR.Time
             }
             status.SyncSourceServer = (uint)ip;
 
-            Socket ntpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            try
+            using (Socket ntpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
             {
-                EndPoint remoteEP = new IPEndPoint(new IPAddress(serverAddress), 123);
-
-                // init request
-                byte[] ntpData = new byte[48];
-                Array.Clear(ntpData, 0, 48);
-                ntpData[0] = 0x1B; // set protocol version
-
-                // send request              
-                ntpSocket.SendTo(ntpData, remoteEP);   // do this twice to make reliable -- not sure why, but it makes HUGE difference
-                ntpSocket.SendTo(ntpData, remoteEP);
-
-                // wait, if no response, timeout
-                if (ntpSocket.Poll(timeout * 1000 * 1000, SelectMode.SelectRead))
-                {
-                    // get response
-                    ntpSocket.ReceiveFrom(ntpData, ref remoteEP);
-                    ntpSocket.Close();
-
-                    // parse time value
-                    byte offsetTransmitTime = 40;
-                    ulong intpart = 0;
-                    ulong fractpart = 0;
-                    for (int i = 0; i <= 3; i++) intpart = (intpart << 8) | ntpData[offsetTransmitTime + i];
-                    for (int i = 4; i <= 7; i++) fractpart = (fractpart << 8) | ntpData[offsetTransmitTime + i];
-                    ulong milliseconds = (intpart * 1000 + (fractpart * 1000) / 0x100000000L);
-
-                    DateTime ntpTime = new DateTime(1900, 1, 1) + TimeSpan.FromTicks((long)milliseconds * TimeSpan.TicksPerMillisecond);
-                    
-                    ntpTime = ntpTime.AddMinutes(timeZoneOffset);  // universal => local
-                                                                  
-                    if (Settings.AutoDayLightSavings && IsDST(ntpTime))
-                        ntpTime = ntpTime.AddMinutes(dstOffset);
-                  
-                    return ntpTime;
-                }
-                else
-                {
-                    // timeout
-                    errorCode = CLR_E_TIMEOUT;
-                    ntpSocket.Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                // get errorCode from exception type
-                Type exceptionType = typeof(Exception);
-                System.Reflection.FieldInfo hresultFieldInfo =
-                    exceptionType.GetField("m_HResult", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                errorCode = hresultFieldInfo != null ? (uint)hresultFieldInfo.GetValue(ex) : 0;
-
+                //Socket ntpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 try
                 {
-                    if (ntpSocket != null)
+                    EndPoint remoteEP = new IPEndPoint(new IPAddress(serverAddress), 123);
+
+                    // init request
+                    byte[] ntpData = new byte[48];
+                    Array.Clear(ntpData, 0, 48);
+                    ntpData[0] = 0x1B; // set protocol version
+
+                    // send request              
+                    ntpSocket.SendTo(ntpData, remoteEP);   // do this twice to make reliable -- not sure why, but it makes HUGE difference
+                    ntpSocket.SendTo(ntpData, remoteEP);
+
+                    // wait, if no response, timeout
+                    if (ntpSocket.Poll(timeout * 1000 * 1000, SelectMode.SelectRead))
+                    {
+                        // get response
+                        ntpSocket.ReceiveFrom(ntpData, ref remoteEP);
                         ntpSocket.Close();
+
+                        // parse time value
+                        byte offsetTransmitTime = 40;
+                        ulong intpart = 0;
+                        ulong fractpart = 0;
+                        for (int i = 0; i <= 3; i++) intpart = (intpart << 8) | ntpData[offsetTransmitTime + i];
+                        for (int i = 4; i <= 7; i++) fractpart = (fractpart << 8) | ntpData[offsetTransmitTime + i];
+                        ulong milliseconds = (intpart * 1000 + (fractpart * 1000) / 0x100000000L);
+
+                        DateTime ntpTime = new DateTime(1900, 1, 1) + TimeSpan.FromTicks((long)milliseconds * TimeSpan.TicksPerMillisecond);
+
+                        ntpTime = ntpTime.AddMinutes(timeZoneOffset);  // universal => local
+
+                        if (Settings.AutoDayLightSavings && IsDST(ntpTime))
+                            ntpTime = ntpTime.AddMinutes(dstOffset);
+
+                        return ntpTime;
+                    }
+                    else
+                    {
+                        // timeout
+                        errorCode = CLR_E_TIMEOUT;
+                        ntpSocket.Close();
+                    }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    // get errorCode from exception type
+                    Type exceptionType = typeof(Exception);
+                    System.Reflection.FieldInfo hresultFieldInfo =
+                        exceptionType.GetField("m_HResult", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    errorCode = hresultFieldInfo != null ? (uint)hresultFieldInfo.GetValue(ex) : 0;
+
+                    try
+                    {
+                        if (ntpSocket != null)
+                            ntpSocket.Close();
+                    }
+                    catch { }
+                }
             }
 
             return DateTime.MinValue;

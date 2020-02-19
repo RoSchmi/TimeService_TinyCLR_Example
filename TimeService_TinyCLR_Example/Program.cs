@@ -32,12 +32,14 @@ namespace TimeService_TinyCLR_Example
         private static bool linkReady = false;
 
         private static NetworkController networkController;
+
+        private static GpioPin LED;
         
         static void Main()
         {
             // If wanted blink a LED to signal start of the program
             /*
-            var LED = GpioController.GetDefault().OpenPin(SC20260.GpioPin.PH6);
+            LED = GpioController.GetDefault().OpenPin(SC20260.GpioPin.PH6);
             LED.SetDriveMode(GpioPinDriveMode.Output);
             for (int i = 0; i < 10; i++)
             {
@@ -63,8 +65,8 @@ namespace TimeService_TinyCLR_Example
             // Set parameters of the TimeService
             TimeServiceSettings timeSettings = new TimeServiceSettings()
             {
-                RefreshTime = 60,                          // every 60 sec (for tests)      
-                //RefreshTime = 21600,                         // every 6 hours (60 x 60 x 6) default: 300000 sec               
+                //RefreshTime = 60,                          // every 60 sec (for tests)      
+                RefreshTime = 2 * 60 * 60,                   // every 2 hours (2 x 60 x 60) default: 300000 sec               
                 AutoDayLightSavings = false,                 // We use our own timeshift calculation
                 ForceSyncAtWakeUp = true,
                 Tolerance = 10000                            // deviation may be up to 10 sec
@@ -160,7 +162,7 @@ namespace TimeService_TinyCLR_Example
 
         private static void TimeService_SystemTimeChecked(object sender, SystemTimeChangedEventArgs e)
         {
-            Debug.WriteLine("SystemTime was checked! " + DateTime.Now);         
+            Debug.WriteLine("SystemTime was checked! " + DateTime.Now);          
         }
 
         private static void TimeService_SystemTimeChanged(object sender, SystemTimeChangedEventArgs e)
