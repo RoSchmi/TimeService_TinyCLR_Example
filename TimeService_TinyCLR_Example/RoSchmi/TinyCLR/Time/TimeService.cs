@@ -189,10 +189,10 @@ namespace RoSchmi.TinyCLR.Time
                 {
                     
                     SetUtcTime(ntpTime.AddMinutes( - timeZoneOffset));
-                    SystemTimeChangedEventArgs changedEvent = new SystemTimeChangedEventArgs(DateTime.Now);
+                    SystemTimeChangedEventArgs changedEvent = new SystemTimeChangedEventArgs(DateTime.Now, Settings.AutoDayLightSavings);
                     SystemTimeChanged(null, changedEvent);
                 }
-                SystemTimeChangedEventArgs checkedEvent = new SystemTimeChangedEventArgs(DateTime.Now);
+                SystemTimeChangedEventArgs checkedEvent = new SystemTimeChangedEventArgs(DateTime.Now, Settings.AutoDayLightSavings);
                 SystemTimeChecked(null, checkedEvent);
             }
             return status;
@@ -290,7 +290,7 @@ namespace RoSchmi.TinyCLR.Time
             return DateTime.MinValue;
         }
 
-        private static bool IsDST(DateTime today)
+        public static bool IsDST(DateTime today)
         {
             DateTime dstStartDay = GetDstDate(dstStart, today);
             DateTime dstEndDay = GetDstDate(dstEnd, today);
@@ -314,6 +314,31 @@ namespace RoSchmi.TinyCLR.Time
                     return false; // not in dsl
             }
         }
+        public static int GetDstOffset(DateTime today)
+        {       
+            DateTime dstStartDay = GetDstDate(dstStart, today);
+            DateTime dstEndDay = GetDstDate(dstEnd, today);
+
+            if (dstStartDay <= dstEndDay)
+            {   // northern hem
+                if (today < dstStartDay)
+                    return 0; // before dsl
+                else if (today >= dstEndDay)
+                    return 0; // after dsl
+                else
+                    return dstOffset; // during dsl 
+            }
+            else
+            {   // southern hem
+                if (today < dstEndDay)
+                    return dstOffset; // still dsl
+                else if (today >= dstStartDay)
+                    return dstOffset; // started dsl
+                else
+                    return 0; // not in dsl
+            }
+        }
+
 
         private static string[] Months = new string[] { "???", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
         private static string[] Days = new string[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
@@ -377,8 +402,13 @@ namespace RoSchmi.TinyCLR.Time
     public class SystemTimeChangedEventArgs : EventArgs
     {
         public readonly DateTime EventTime;
+        public readonly bool AutoDayLightSavings;
 
-        public SystemTimeChangedEventArgs(DateTime eventTime) { }
+        public SystemTimeChangedEventArgs(DateTime eventTime, bool autoDayLightSavings) 
+        { 
+            EventTime = eventTime; 
+            AutoDayLightSavings = autoDayLightSavings; 
+        }
     }
 
     public class TimeSyncFailedEventArgs : EventArgs
@@ -386,7 +416,11 @@ namespace RoSchmi.TinyCLR.Time
         public readonly uint ErrorCode;
         public readonly DateTime EventTime;
 
-        public TimeSyncFailedEventArgs(DateTime eventTime, uint errorCode) { }
+        public TimeSyncFailedEventArgs(DateTime eventTime, uint errorCode) 
+        {
+            ErrorCode = errorCode;
+            EventTime = eventTime;
+        }
     }
 
     public class TimeServiceSettings
