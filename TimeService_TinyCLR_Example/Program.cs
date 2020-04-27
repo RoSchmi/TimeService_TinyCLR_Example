@@ -156,13 +156,10 @@ namespace TimeService_TinyCLR_Example
                 loopCounter++;
             }
 
-            // RoSchmi
-            // ToDo: check if better DateTime.UtcNow should be stored in rtc
-
             var rtc = RtcController.GetDefault();
             if (timeServiceIsRunning)
             {
-                rtc.Now = DateTime.Now;
+                rtc.Now = DateTime.UtcNow;
             }
             else
             {
@@ -170,7 +167,7 @@ namespace TimeService_TinyCLR_Example
                 // Get time from Rtc
                 if (rtc.IsValid)
                 {
-                    SystemTime.SetTime(rtc.Now);
+                    SystemTime.SetTime(rtc.Now, timeZoneOffset);
                 }
             }
 
