@@ -1,4 +1,4 @@
-﻿// Copyright RoSchmi 2020 License Apache 2.0 Version 2. April 2020
+﻿// Copyright RoSchmi 2020 License Apache 2.0 Version 27. April 2020
 // This is an adaption to TinyCLR of the "FixedTimeService" for NETMF posted by @eolson in GHI Codeshare in 2013
 // The example runs on a GHI SC20260D Devboard and uses an ENC28 Ethernet Module on the micro Bus 1 socket
 // For other boards the GPIO Pins for the ENC28 Module have to be adapted
