@@ -156,6 +156,9 @@ namespace TimeService_TinyCLR_Example
                 loopCounter++;
             }
 
+            // RoSchmi
+            // ToDo: check if better DateTime.UtcNow should be stored in rtc
+
             var rtc = RtcController.GetDefault();
             if (timeServiceIsRunning)
             {
@@ -229,12 +232,14 @@ namespace TimeService_TinyCLR_Example
             var networkCommunicationInterfaceSettings = new
                 SpiNetworkCommunicationInterfaceSettings();
 
+            var cs = GHIElectronics.TinyCLR.Devices.Gpio.GpioController.GetDefault().
+           OpenPin(GHIElectronics.TinyCLR.Pins.SC20260.GpioPin.PG12);
+
             var settings = new GHIElectronics.TinyCLR.Devices.Spi.SpiConnectionSettings()
             {
-                ChipSelectLine = SC20260.GpioPin.PG12,
+                ChipSelectLine = cs,
                 ClockFrequency = 4000000,
-                Mode = GHIElectronics.TinyCLR.Devices.Spi.SpiMode.Mode0,
-                DataBitLength = 8,
+                Mode = GHIElectronics.TinyCLR.Devices.Spi.SpiMode.Mode0,           
                 ChipSelectType = GHIElectronics.TinyCLR.Devices.Spi.SpiChipSelectType.Gpio,
                 ChipSelectHoldTime = TimeSpan.FromTicks(10),
                 ChipSelectSetupTime = TimeSpan.FromTicks(10)
@@ -246,11 +251,13 @@ namespace TimeService_TinyCLR_Example
             networkCommunicationInterfaceSettings.GpioApiName =
                 GHIElectronics.TinyCLR.Pins.SC20260.GpioPin.Id;
 
-            networkCommunicationInterfaceSettings.SpiSettings = settings;
-            networkCommunicationInterfaceSettings.InterruptPin = SC20260.GpioPin.PG6;
+            networkCommunicationInterfaceSettings.SpiSettings = settings;           
+            networkCommunicationInterfaceSettings.InterruptPin = GHIElectronics.TinyCLR.Devices.Gpio.GpioController.GetDefault().
+               OpenPin(GHIElectronics.TinyCLR.Pins.SC20260.GpioPin.PG6);
             networkCommunicationInterfaceSettings.InterruptEdge = GpioPinEdge.FallingEdge;
-            networkCommunicationInterfaceSettings.InterruptDriveMode = GpioPinDriveMode.InputPullUp;
-            networkCommunicationInterfaceSettings.ResetPin = SC20260.GpioPin.PI8;
+            networkCommunicationInterfaceSettings.InterruptDriveMode = GpioPinDriveMode.InputPullUp;          
+            networkCommunicationInterfaceSettings.ResetPin = GHIElectronics.TinyCLR.Devices.Gpio.GpioController.GetDefault().
+                OpenPin(GHIElectronics.TinyCLR.Pins.SC20260.GpioPin.PI8);
             networkCommunicationInterfaceSettings.ResetActiveState = GpioPinValue.Low;
 
             networkInterfaceSetting.Address = new IPAddress(new byte[] { 192, 168, 1, 122 });
