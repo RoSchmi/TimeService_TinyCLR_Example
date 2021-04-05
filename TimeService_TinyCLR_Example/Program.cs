@@ -268,8 +268,8 @@ namespace TimeService_TinyCLR_Example
 
 
             networkInterfaceSetting.MacAddress = new byte[] { 0x00, 0x4, 0x00, 0x00, 0x00, 0x00 };
-            networkInterfaceSetting.IsDhcpEnabled = true;
-            networkInterfaceSetting.IsDynamicDnsEnabled = true;
+            networkInterfaceSetting.DhcpEnable = true;
+            networkInterfaceSetting.DhcpEnable = true;
             
 
             networkInterfaceSetting.TlsEntropy = new byte[] { 0, 1, 2, 3 };
